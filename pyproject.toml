@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=80", "wheel"]
+version = "0.4.2"
+
+[project]
+authors = [
+  {name = "Gordon", email = "gd.shunhua@gmail.com"},
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: APACHE License",
+]
+name = "fin_mcp_server"
+readme = "README.md"
+requires-python = ">=3.9,<4.0"
+version = "1.0.0"
+
+dependencies = [
+  "matplotlib>=3.10.3",
+  "mcp>=1.12.0",
+  "mplfinance>=0.12.10b0",
+  "numpy>=2.3.1",
+  "openai>=1.97.1",
+  "pandas>=2.2.3",
+  "PyYAML>=6.0.2",
+  "ta-lib>=0.6.4",
+  "tabulate>=0.9.0",
+  "yfinance>=0.2.65",
+]
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = {find = {where = ["src"]}}
