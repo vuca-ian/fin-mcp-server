@@ -36,9 +36,8 @@ mcp:
 
 stock:
   source: "yahoo" # 数据源，支持 yahoo 或 local
-
+  temp_dir: "temp"
 llm:
-  llm_type: "openai" # 支持 openai 或 ollama
   base_url: "https://api.openai.com/v1" # API 基础 URL
   api_key: "your-api-key" # API 密钥
   model: "gpt-4o-mini" # 使用的模型
