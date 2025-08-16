@@ -1,13 +1,14 @@
-from argparse import Namespace
 from mcp.server import  FastMCP
 from mcp.types import TextContent
 from .stock import Stock
 from .utils.llm import create_llm_client
 from .utils.image import encode_image_to_base64
+from .utils.env import load_config
 import json
 import logging
 import os
-import yaml
+
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,46 +16,59 @@ logging.basicConfig(
 )
 logger = logging.getLogger("fin_mcp_server")
 
-def load_config(encoding: str = "utf-8"):
-    config_path = os.getenv("YML", os.path.join(os.getcwd(), "config.yml"))
-    try:
-        with open(config_path, 'r',encoding = encoding) as file:
-            config = yaml.safe_load(file)
-            return Namespace(**config)
-    except FileNotFoundError:
-        logger.error(f"Configuration file {config_path} not found.")
-        raise
-    except (json.JSONDecodeError, yaml.YAMLError) as exc:
-        logger.error(f"Error parsing configuration file {config_path}: {exc}")
-        raise
 
 global_config = load_config()
 mcp_config = global_config.mcp
 stock_config = global_config.stock
-mcp = FastMCP("fin_mcp_server", **mcp_config, settings={"log_level": 'debug'})
+mcp = FastMCP("fin_mcp_server", **mcp_config)
 llm_config = global_config.llm
 llm_client = create_llm_client(llm_config)
 
-
-@mcp.tool(name="get_data", description="Fetch the data from yfinance through a company name")
-async def get_data(symbol: str, limit: int = 10):
-    """Fetch the data from yfinance through a company name
-
-    Args:
-        symbol: The symbol name to fetch the stock data
-        limit: The number of rows to return
-    """
+@mcp.tool(name="get_compony_info", description="获取公司信息")
+async def get_compony_info(symbol: str):
     try:
         logger.info(f"Getting data for {symbol}")
         stock = Stock(symbol=symbol, stock_config=stock_config, config = {})
-        data = stock.data
-        return [TextContent(type='text', text=data.tail(limit).to_markdown())]
+        data = stock.get_company_info(symbol)
+        return [TextContent(type='text', text=json.dumps(data))]
     except Exception as e:
         logger.error(f"Error fetching data: {e}")
         return [TextContent(type='text', text=json.dumps({"error": str(e)}))]
 
+@mcp.tool(name="get_data", description="获取股票数据,周期默认为 30d, 也可以取值 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max")
+async def get_data(symbol: str, period: str = "30d"):
+    """Fetch the data from yfinance through a company name
 
-@mcp.tool(name="generate_fin_report", description="Generate financial analysis report based on specified company stock information")
+    Args:
+        symbol: The symbol name to fetch the stock data
+        period: The period to fetch the data for. Defaults to "30d". Can be one of "1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max" of rows to return
+    """
+    try:
+        logger.info(f"Getting data for {symbol}")
+        stock = Stock(symbol=symbol, stock_config=stock_config, config = {})
+        data = stock.get_history_data(period)
+        return [TextContent(type='text', text=data.to_markdown())]
+    except Exception as e:
+        logger.error(f"Error fetching data: {e}")
+        return [TextContent(type='text', text=json.dumps({"error": str(e)}))]
+
+@mcp.tool(name="get_quarterly_balance_sheet", description="获取股票的季度资产负债表")
+async def get_quarterly_balance_sheet(symbol: str):
+    """Fetch the data from yfinance through a company name
+
+    Args:
+        symbol: The symbol name to fetch the stock data
+    """
+    try:
+        logger.info(f"Getting data for {symbol}")
+        stock = Stock(symbol=symbol, stock_config=stock_config, config = {})
+        data = stock.get_quarterly_balance_sheet()
+        return [TextContent(type='text', text=data.to_markdown())]
+    except Exception as e:
+        logger.error(f"Error fetching data: {e}")
+        return [TextContent(type='text', text=json.dumps({"error": str(e)}))]
+
+@mcp.tool(name="generate_fin_report", description="生成专业的金融分析报告")
 async def generate_fin_report(symbol: str, windows:int=50):
     """ Generate financial analysis report based on specified company stock information
     Args:
@@ -64,7 +78,7 @@ async def generate_fin_report(symbol: str, windows:int=50):
     try:
         logger.info(f"Generating financial report for {symbol} with {windows} windows")
         stock = Stock(symbol=symbol, stock_config=stock_config, config = {})
-        chart_path = stock.plot_with_tech_indicators(windows=windows)
+        chart_path,image_name = stock.plot_with_tech_indicators(windows=windows)
         if not chart_path or not os.path.exists(chart_path):
             error_msg = f"图表生成失败: {chart_path}"
             logger.error(error_msg)
@@ -105,6 +119,8 @@ async def generate_fin_report(symbol: str, windows:int=50):
                 "| 最高价 | $XX.XX | +X.XX% | 今日最高价格 |\n"
                 "| 最低价 | $XX.XX | +X.XX% | 今日最低价格 |\n"
                 "| 成交量 | XXX万 | +X.XX% | 相比昨日成交量 |\n"
+                "## K线图"
+                "[图片地址]"
                 "## 2. 基本面分析\n"
                 "## 3. 风险提示\n"
                 "## 4. 市场情绪分析\n"
@@ -126,7 +142,7 @@ async def generate_fin_report(symbol: str, windows:int=50):
                     },
                     {
                         "type": "text",
-                        "text": f"请分析 {symbol} 的技术图表，提供详细的技术分析报告。图表显示了最近 {windows} 个交易日的数据。"
+                        "text": f"请分析 {symbol} 的技术图表[{stock_config.get("public_base_url")}/static/{image_name}]，提供详细的技术分析报告。图表显示了最近 {windows} 个交易日的数据。"
                     },
                 ],
             }
@@ -147,23 +163,7 @@ async def generate_fin_report(symbol: str, windows:int=50):
         error_msg = f"生成报告时出错: {str(e)}"
         logger.error(error_msg, exc_info=True)
         return [TextContent(type='text', text=json.dumps({"error": error_msg}))]
-    finally:
-        if chart_path and os.path.exists(chart_path):
-            try:
-                os.remove(chart_path)
-                logger.debug(f"已删除临时图片文件: {chart_path}")
-                # 尝试删除空的父目录（如果它在temp目录下）
-                chart_dir = os.path.dirname(chart_path)
-                if ("temp" in chart_dir.lower() or "tmp" in chart_dir.lower()) and os.path.exists(chart_dir):
-                    try:
-                        os.rmdir(chart_dir)  # 只有目录为空时才会删除
-                        logger.debug(f"已删除空目录: {chart_dir}")
-                    except OSError:
-                        # 目录不为空，忽略错误
-                        pass
-            except Exception as e:
-                logger.warning(f"删除临时文件失败: {e}")
 
 
 def main():
-    mcp.run(transport=mcp_config['transport'])
+    mcp.run(transport=global_config.transport)

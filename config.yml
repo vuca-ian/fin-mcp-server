@@ -1,15 +1,16 @@
+transport: "sse"
 mcp:
-  transport: "sse" # 或其他支持的传输方式
   host: "0.0.0.0"
   port: 8000
 
 stock:
   source: "yahoo" # 数据源，支持 yahoo 或 local
-  temp_dir: "temp"
+  data_dir: "/app/data"
+  public_base_url: http://localhost:18080
 llm:
   llm_type: "openai" # 支持 openai 或 ollama
-  base_url: "https://api.openai.com/v1" # API 基础 URL
-  api_key: "your-api-key" # API 密钥
-  model: "gpt-4o-mini" # 使用的模型
+  base_url: "https://api-inference.modelscope.cn/v1" # API 基础 URL
+  api_key: ${API_KEY} # API 密钥
+  model: "Qwen/Qwen2.5-VL-72B-Instruct" # 使用的模型
   temperature: 0.7 # 生成温度
   max_tokens: 4096 # 最大令牌数

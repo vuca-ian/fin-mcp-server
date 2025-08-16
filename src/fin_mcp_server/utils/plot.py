@@ -189,4 +189,4 @@ def plot_kline(df: pd.DataFrame, cur:pd.DataFrame, path:str, symbol:str):
     save_path = f"{path}/kline-{symbol}-{save_date}.png"
     plt.savefig(save_path,dpi=300, bbox_inches='tight')
     plt.close()
-    return save_path
+    return save_path,f"kline-{symbol}-{save_date}.png"

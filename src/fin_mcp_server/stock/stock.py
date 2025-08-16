@@ -11,9 +11,45 @@ class Stock:
         self.symbol = symbol
         self.config = config
         self.source = stock_config['source']
-        self.temp_dir = stock_config['temp_dir']
+        self.temp_dir = stock_config['data_dir']
         self._data = self.get_yahoo_data(symbol)
-    
+
+    def get_company_info(self, symbol):
+        try:
+            ticker = yf.Ticker(symbol)
+            info = ticker.info
+            return {
+                'name': info.get('shortName', ''),
+                "long_name": info.get('longName', ''),
+                'industry': info.get('industry', ''),
+                'sector': info.get('sector', ''),
+                'country': info.get('country', ''),
+                'market': info.get('market', ''),
+                "market_cap": info.get('marketCap', ''),
+                'currency': info.get('currency', ''),
+                'exchange': info.get('exchange', ''),
+                'exchangeTimezoneName': info.get('exchangeTimezoneName', ''),
+            }
+        except Exception as e:
+            self.logger.error(f"获取公司信息失败：{e}")
+            return None
+
+    def get_quarterly_balance_sheet(self):
+        try:
+            ticker = yf.Ticker(self.symbol)
+            return ticker.quarterly_balance_sheet
+        except Exception as e:
+            self.logger.error(f"获取公司信息失败：{e}")
+            return None
+
+    def get_history_data(self, period: str = "30d"):
+        try:
+            ticker = yf.Ticker(self.symbol)
+            return ticker.history(period=period, auto_adjust=True)
+        except Exception as e:
+            self.logger.error(f"获取公司信息失败：{e}")
+            return None
+
     def get_yahoo_data(self, symbol: str):
         """
         get data from Yahoo Finance
@@ -46,9 +82,9 @@ class Stock:
         if current_data is None:
             self.logger.warning("警告：无法获取当前数据点")
             return None
-        plot_path = os.path.join(os.getcwd(), self.temp_dir)
-        chart_path = plot_kline(data[-windows:], current_data, plot_path, self.symbol)
-        return chart_path
+        plot_path = self.temp_dir
+        chart_path, image_name = plot_kline(data[-windows:], current_data, plot_path, self.symbol)
+        return chart_path,image_name
 
 
     @property

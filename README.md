@@ -31,31 +31,33 @@ Financial MCP Server 是一个基于多模态大模型的金融技术分析工�
 你需要一个 YAML 配置文件来配置服务器,在 config_demo.yml 中提供了一个默认配置文件，内容如下：
 
 ```yaml
+transport: "sse" # 或其他支持的传输方式
 mcp:
-  transport: "stdio" # 或其他支持的传输方式
+  host: "0.0.0.0"
+  port: 8000
 
 stock:
   source: "yahoo" # 数据源，支持 yahoo 或 local
-  temp_dir: "temp"
+  temp_dir: "/app/data"
 llm:
   base_url: "https://api.openai.com/v1" # API 基础 URL
-  api_key: "your-api-key" # API 密钥
-  model: "gpt-4o-mini" # 使用的模型
+  api_key: ${API_KEY} # API 密钥, 请在.env 或 环境变量中设置
+  model: "Qwen/Qwen2.5-VL-72B-Instruct" # 使用的模型
   temperature: 0.7 # 生成温度
   max_tokens: 4096 # 最大令牌数
 ```
 
 ### MCP 配置
 
-你可以将传输协议设置为`stdio`或`sse`。
+你可以将传输协议设置为`stdio`、`sse`、`streamable-http`。
 
 #### STDIO
 
 对于 `stdio` 协议，你可以这样设置:
 
 ```yaml
-mcp:
-  transport: "stdio"
+transport: "stdio"
+  
 ```
 
 #### SSE
@@ -63,8 +65,8 @@ mcp:
 对于 `sse` 协议，你可以这样设置:
 
 ```yaml
+transport: "sse"
 mcp:
-  transport: "sse"
   host: "0.0.0.0"
   port: 8000
 ```
@@ -82,17 +84,29 @@ mcp:
 YML=config.yml python -m fin_mcp_server
 ```
 
+## stock 配置
+```yaml
+stock:
+  source: "yahoo" #目前只支持 Yahoo Finance
+  data_dir: /app/data # 存放股票数据、k线图的目录
+  public_base_url: "http://your-domain.com"  # 用于生成图片的 URL
+```
+
+
 ## 输出示例
 
 #### 生成的分析报告包含以下内容：
-
-1. 价格趋势分析：短期、中期、长期趋势判断
-2. 技术指标解读：MACD、RSI、KDJ 等指标协同验证
-3. 量价关系分析：成交量与价格的配合关系
-4. 支撑压力位：动态计算关键支撑和阻力位
-5. 风险预警：潜在风险信号识别
-6. 交易策略：具体的入场、止损、止盈建议
-7. 置信度评估：A/B/C 三级置信度评级
+1. 公司信息
+2. 近期季度资产负债信息
+3. 近期股票数据
+4. 近期K 线图
+5. 价格趋势分析：短期、中期、长期趋势判断
+6. 技术指标解读：MACD、RSI、KDJ 等指标协同验证
+7. 量价关系分析：成交量与价格的配合关系
+8. 支撑压力位：动态计算关键支撑和阻力位
+9. 风险预警：潜在风险信号识别
+10. 交易策略：具体的入场、止损、止盈建议
+11. 置信度评估：A/B/C 三级置信度评级
 
 ## 注意事项
 
