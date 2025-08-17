@@ -46,7 +46,8 @@ mcp:
 
 stock:
   source: "yahoo" # 数据源，支持 yahoo 或 local
-  temp_dir: "/app/data"
+  data_dir: /app/data # 存放股票数据、k线图的目录
+  public_base_url: "http://your-domain.com"  # 用于生成图片的 URL
 llm:
   base_url: "https://api.openai.com/v1" # API 基础 URL
   api_key: ${API_KEY} # API 密钥, 请在.env 或 环境变量中设置
