@@ -18,6 +18,14 @@ Financial MCP Server 是一个基于多模态大模型的金融技术分析工�
 - 丰富技术指标：内置多种常用技术指标计算
 - 专业图表：生成符合金融行业标准的专业 K 线图
 
+### 工具
+|工具| 说明          |
+|---|-------------|
+| get_compony_info | 获取公司基本信息    |
+| get_quarterly_balance_sheet | 获取季度资产负债表信息 |
+| get_data | 获取近期的股票数据   |
+| generate_fin_report | 生成专业的金融分析报告       |
+
 ## 部署指南
 
 环境要求
@@ -31,7 +39,7 @@ Financial MCP Server 是一个基于多模态大模型的金融技术分析工�
 你需要一个 YAML 配置文件来配置服务器,在 config_demo.yml 中提供了一个默认配置文件，内容如下：
 
 ```yaml
-transport: "sse" # 或其他支持的传输方式
+transport: "sse" # 支持stdio、sse、streamable-http
 mcp:
   host: "0.0.0.0"
   port: 8000
@@ -99,7 +107,7 @@ stock:
 1. 公司信息
 2. 近期季度资产负债信息
 3. 近期股票数据
-4. 近期K 线图
+4. 近期K线图
 5. 价格趋势分析：短期、中期、长期趋势判断
 6. 技术指标解读：MACD、RSI、KDJ 等指标协同验证
 7. 量价关系分析：成交量与价格的配合关系

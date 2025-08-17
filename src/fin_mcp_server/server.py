@@ -68,7 +68,7 @@ async def get_quarterly_balance_sheet(symbol: str):
         logger.error(f"Error fetching data: {e}")
         return [TextContent(type='text', text=json.dumps({"error": str(e)}))]
 
-@mcp.tool(name="generate_fin_report", description="生成专业的金融分析报告")
+@mcp.tool(name="generate_fin_report", description="根据股票数据和k线图生成专业的金融分析报告")
 async def generate_fin_report(symbol: str, windows:int=50):
     """ Generate financial analysis report based on specified company stock information
     Args:
@@ -119,6 +119,8 @@ async def generate_fin_report(symbol: str, windows:int=50):
                 "| 最高价 | $XX.XX | +X.XX% | 今日最高价格 |\n"
                 "| 最低价 | $XX.XX | +X.XX% | 今日最低价格 |\n"
                 "| 成交量 | XXX万 | +X.XX% | 相比昨日成交量 |\n"
+                "| 换手率 | XX.XX% | +X.XX% | 昨日换手率 |\n"
+                
                 "## K线图"
                 "[图片地址]"
                 "## 2. 基本面分析\n"
@@ -142,7 +144,7 @@ async def generate_fin_report(symbol: str, windows:int=50):
                     },
                     {
                         "type": "text",
-                        "text": f"请分析 {symbol} 的技术图表[{stock_config.get("public_base_url")}/static/{image_name}]，提供详细的技术分析报告。图表显示了最近 {windows} 个交易日的数据。"
+                        "text": f"请分析 {symbol} 的k线技术图表[图片地址：{stock_config.get("public_base_url")}/static/{image_name}]，提供详细的技术分析报告。图表显示了最近 {windows} 个交易日的数据。"
                     },
                 ],
             }
